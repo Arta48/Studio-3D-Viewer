@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+    <defs>
+        <!-- Background Card Gradient -->
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#181b22"/>
+            <stop offset="50%" stop-color="#101217"/>
+            <stop offset="100%" stop-color="#08090b"/>
+        </linearGradient>
+
+        <!-- Card Subtle Outer Border -->
+        <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+            <stop offset="50%" stop-color="#ffffff" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#00f2fe" stop-opacity="0.2"/>
+        </linearGradient>
+
+        <!-- Studio Glow Center Background -->
+        <radialGradient id="centerGlow" cx="50%" cy="48%" r="45%">
+            <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.25"/>
+            <stop offset="40%" stop-color="#3b82f6" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#0e1117" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- 3D Cube Top Face (Key Light) -->
+        <linearGradient id="cubeTop" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#1e293b" stop-opacity="0.8"/>
+        </linearGradient>
+
+        <!-- 3D Cube Left Face (Fill Shadow) -->
+        <linearGradient id="cubeLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1e293b" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95"/>
+        </linearGradient>
+
+        <!-- 3D Cube Right Face -->
+        <linearGradient id="cubeRight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#334155" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95"/>
+        </linearGradient>
+
+        <!-- Neon Cyan Core / Wireframe Lines -->
+        <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#00f2fe"/>
+        </linearGradient>
+
+        <!-- Soft Glow Filter -->
+        <filter id="neonBlur" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="8" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+        <filter id="intenseGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="16" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Base App Tile (Squircle flush to the edges) -->
+    <rect x="0" y="0" width="512" height="512" rx="120" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="2.5"/>
+
+    <!-- Ambient Studio Backdrop Spotlight -->
+    <circle cx="256" cy="245" r="190" fill="url(#centerGlow)"/>
+
+    <!-- Perspective Floor Grid (Studio Ground) -->
+    <g opacity="0.3" stroke="#64748b" stroke-width="1.2">
+        <line x1="140" y1="410" x2="372" y2="410"/>
+        <line x1="110" y1="435" x2="402" y2="435"/>
+        <line x1="70"  y1="465" x2="442" y2="465"/>
+        <!-- Grid Perspective Radians -->
+        <line x1="256" y1="385" x2="80"  y2="475"/>
+        <line x1="256" y1="385" x2="170" y2="475"/>
+        <line x1="256" y1="385" x2="256" y2="475"/>
+        <line x1="256" y1="385" x2="342" y2="475"/>
+        <line x1="256" y1="385" x2="432" y2="475"/>
+    </g>
+
+    <!-- 3D RGB Coordinate Axes (Bottom Center) -->
+    <g opacity="0.75" stroke-linecap="round" stroke-width="2.5">
+        <!-- X-Axis (Red) -->
+        <line x1="256" y1="385" x2="305" y2="410" stroke="#f43f5e"/>
+        <!-- Y-Axis (Green / Vertical Up) -->
+        <line x1="256" y1="385" x2="256" y2="330" stroke="#10b981"/>
+        <!-- Z-Axis (Blue) -->
+        <line x1="256" y1="385" x2="207" y2="410" stroke="#38bdf8"/>
+    </g>
+
+    <!-- ================= MASTER 3D GLASS CUBE ================= -->
+    <g transform="translate(0, -10)">
+        <!-- Top Face -->
+        <polygon points="256,110 376,178 256,246 136,178" fill="url(#cubeTop)" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- Left Face -->
+        <polygon points="136,178 256,246 256,386 136,318" fill="url(#cubeLeft)" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- Right Face -->
+        <polygon points="256,246 376,178 376,318 256,386" fill="url(#cubeRight)" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- Geometric Polygon Tessellation Subdivisions (Wireframe details) -->
+        <g stroke="#38bdf8" stroke-width="1.2" opacity="0.45">
+            <!-- Top Subdivision -->
+            <line x1="196" y1="144" x2="316" y2="212"/>
+            <line x1="316" y1="144" x2="196" y2="212"/>
+
+            <!-- Left Subdivision -->
+            <line x1="196" y1="212" x2="196" y2="352"/>
+            <line x1="136" y1="248" x2="256" y2="316"/>
+
+            <!-- Right Subdivision -->
+            <line x1="316" y1="212" x2="316" y2="352"/>
+            <line x1="256" y1="316" x2="376" y2="248"/>
+        </g>
+
+        <!-- Inner Floating Luminous Core (Energy Node) -->
+        <g filter="url(#intenseGlow)">
+            <!-- Octahedron Core -->
+            <polygon points="256,200 286,246 256,292 226,246" fill="#00f2fe" opacity="0.65"/>
+            <line x1="256" y1="200" x2="256" y2="292" stroke="#ffffff" stroke-width="1.8"/>
+            <line x1="226" y1="246" x2="286" y2="246" stroke="#ffffff" stroke-width="1.8"/>
+        </g>
+
+        <!-- Outer Edge Highlights (Key Light Reflections) -->
+        <line x1="256" y1="110" x2="376" y2="178" stroke="#ffffff" stroke-width="2.5" opacity="0.75" stroke-linecap="round"/>
+        <line x1="256" y1="110" x2="256" y2="246" stroke="#ffffff" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+
+        <!-- Glowing Vertices (Points of the Mesh) -->
+        <g filter="url(#neonBlur)" fill="#ffffff">
+            <circle cx="256" cy="110" r="4.5"/>
+            <circle cx="376" cy="178" r="4.5"/>
+            <circle cx="376" cy="318" r="4.5"/>
+            <circle cx="256" cy="386" r="4.5"/>
+            <circle cx="136" cy="318" r="4.5"/>
+            <circle cx="136" cy="178" r="4.5"/>
+            <circle cx="256" cy="246" r="5" fill="#38bdf8"/>
+        </g>
+    </g>
+
+    <!-- Top-Right Studio Sparkle (Lens Flare Glint) -->
+    <g transform="translate(365, 120)" filter="url(#neonBlur)">
+        <path d="M 0,-18 Q 0,0 18,0 Q 0,0 0,18 Q 0,0 -18,0 Q 0,0 0,-18" fill="#ffffff" opacity="0.85"/>
+        <circle cx="0" cy="0" r="3" fill="#38bdf8"/>
+    </g>
+</svg>
