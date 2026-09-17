@@ -63,7 +63,7 @@ namespace StudioViewer {
         // Fallback to QImage for WebP and extended formats
         QImage qimg;
         if (qimg.load(QString::fromStdString(filepath))) {
-            #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+            #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
             qimg = qimg.convertToFormat(QImage::Format_RGBA8888).flipped(Qt::Vertical);
             #else
             qimg = qimg.convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
@@ -98,7 +98,7 @@ namespace StudioViewer {
         // Fallback to QImage
         QImage qimg;
         if (qimg.loadFromData(buffer, static_cast<int>(len))) {
-            #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+            #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
             qimg = qimg.convertToFormat(QImage::Format_RGBA8888).flipped(Qt::Vertical);
             #else
             qimg = qimg.convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
