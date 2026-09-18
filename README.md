@@ -42,18 +42,16 @@ The engine is written in **C++17**, utilizing hardware-accelerated **OpenGL** vi
 
 1.  **glTF 2.0 / GLB (The Modern Standard)**
     *   Full parsing of hierarchical Scene Graphs and transformation matrices.
-    *   Extracts true `baseColorFactor`, `roughnessFactor`, and `metallicFactor`.
+    *   Full PBR material stack: extracts `baseColorFactor`, `roughnessFactor`, `metallicFactor`, emissive radiance, ambient occlusion, and `KHR_materials_transmission` (automotive glass).
     *   Reads JSON `samplers` specification to automatically apply correct texture filtering.
 2.  **Wavefront OBJ + MTL (The Classic Standard)**
     *   Arbitrary n-gon fan triangulation.
-    *   Auto-generation of smooth normals via cross-products and `np.add.at` accumulation.
+    *   Auto-generation of area-weighted smooth normals via cross-products and direct vector accumulation.
     *   Supports classic specular exponent `Ns` to Roughness conversion, as well as modern PBR extensions (`Pr`, `Pm`).
 
 ---
 
 ## 🛠️ Build and Installation
-
-# 🛠️ Build and Installation
 
 ### 🐧 Build on Linux (Arch Linux / Manjaro)
 

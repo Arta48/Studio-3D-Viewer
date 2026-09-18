@@ -9,8 +9,8 @@ on:
   #   branches: [ main ]
 
 env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true' # Полностью скрывает предупреждения об устаревании Node.js 20
-  HOMEBREW_NO_AUTO_UPDATE: '1'                    # Скрывает предупреждения brew и ускоряет запуск шага macOS
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true' # Hide Node.js 20 Errors
+  HOMEBREW_NO_AUTO_UPDATE: '1'                    # Hide Brew Warnings
   HOMEBREW_NO_INSTALL_CLEANUP: '1'
 
 permissions:
@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   # ==========================================
-  # 1. СБОРКА И УПАКОВКА ПОД LINUX (PORTABLE ZIP)
+  # 1. LINUX (PORTABLE ZIP)
   # ==========================================
   build-linux:
     runs-on: ubuntu-latest
@@ -31,10 +31,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake qt6-base-dev libgl1-mesa-dev zip
 
-      - name: Configure and Build
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j$(nproc)
+      - name: Run compile.sh
+        run: bash compile.sh
 
       - name: Package Portable ZIP
         run: |
@@ -49,7 +47,7 @@ jobs:
           path: Studio-3D-Viewer-Linux.zip
 
   # ==========================================
-  # 2. СБОРКА НАТИВНОГО ПАКЕТА ДЛЯ ARCH LINUX
+  # 2. ARCH LINUX (PKG.TAR.ZST)
   # ==========================================
   build-arch:
     runs-on: ubuntu-latest
@@ -64,16 +62,14 @@ jobs:
 
       - name: Patch and Run setup_arch_package.sh
         run: |
-          # Создаем изолированного пользователя builder для makepkg
           useradd -m builder
           echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
           chown -R builder:builder .
 
-          # Отключаем установку пакета (-i) и копируем ТОЛЬКО основной пакет (без debug) в корень перед очисткой
+          # На CI отключаем установку (-i) и забираем собранный архив пакета
           sed -i 's/makepkg -si/makepkg -s/g' setup_arch_package.sh
-          sed -i 's/cd .. \&\& rm -rf studio-3d-viewer_pkg/cp studio-3d-viewer-[0-9]*.pkg.tar.zst ..\/Studio-3D-Viewer.pkg.tar.zst \&\& cd .. \&\& rm -rf studio-3d-viewer_pkg/g' setup_arch_package.sh
+          sed -i 's|cd .. \&\& rm -rf studio-3d-viewer_pkg|cp studio-3d-viewer-[0-9]*.pkg.tar.zst ..\/Studio-3D-Viewer.pkg.tar.zst \&\& cd .. \&\& rm -rf studio-3d-viewer_pkg|g' setup_arch_package.sh
 
-          # Запуск сборки от пользователя builder
           su builder -c "bash setup_arch_package.sh"
 
       - name: Upload Arch Artifact
@@ -83,7 +79,7 @@ jobs:
           path: Studio-3D-Viewer.pkg.tar.zst
 
   # ==========================================
-  # 3. СТАТИЧЕСКАЯ СБОРКА ПОД WINDOWS (PORTABLE ZIP)
+  # 3. WINDOWS (STATIC ZIP)
   # ==========================================
   build-windows:
     runs-on: windows-latest
@@ -116,10 +112,8 @@ jobs:
             mingw-w64-x86_64-libtiff
             mingw-w64-x86_64-vulkan-headers
 
-      - name: Configure and Build
-        run: |
-          cmake -S . -B build-windows -G "MinGW Makefiles"
-          cmake --build build-windows -j2
+      - name: Run compile_windows.sh
+        run: bash compile_windows.sh
 
       - name: Package Windows ZIP (PowerShell)
         shell: powershell
@@ -135,7 +129,7 @@ jobs:
           path: Studio-3D-Viewer-Windows.zip
 
   # ==========================================
-  # 4. СБОРКА ПОД MACOS (PORTABLE & INSTALLER)
+  # 4. MACOS (DMG)
   # ==========================================
   build-macos:
     runs-on: macos-latest
@@ -146,37 +140,14 @@ jobs:
       - name: Install Qt6
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.6.0'
+          version: '6.8.2'
+          target: 'desktop'
 
-      - name: Configure and Build (Universal Binary)
-        run: |
-          # Собираем универсальный бинарник (x86_64 + arm64) с поддержкой систем от macOS 11.0
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET="11.0"
-          cmake --build build -j2
+      - name: Install create-dmg
+        run: brew install create-dmg
 
-      - name: Deploy dependencies into App Bundle
-        run: |
-          macdeployqt "build/Studio 3D Viewer.app"
-
-      - name: Create Drag-and-Drop Installer DMG
-        run: |
-          brew install create-dmg
-          mkdir dmg_root
-          cp -R "build/Studio 3D Viewer.app" dmg_root/
-
-          create-dmg \
-            --volname "Studio 3D Viewer Installer" \
-            --window-pos 200 120 \
-            --window-size 600 450 \
-            --icon-size 100 \
-            --icon "Studio 3D Viewer.app" 150 150 \
-            --hide-extension "Studio 3D Viewer.app" \
-            --app-drop-link 450 150 \
-            Studio-3D-Viewer.dmg \
-            dmg_root/
+      - name: Run compile_macos.sh
+        run: bash compile_macos.sh
 
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
@@ -185,12 +156,12 @@ jobs:
           path: Studio-3D-Viewer.dmg
 
   # ==========================================
-  # 5. АВТОМАТИЧЕСКАЯ ПУБЛИКАЦИЯ РЕЛИЗА
+  # 5. PUBLISH RELEASE
   # ==========================================
   publish-release:
     needs: [build-linux, build-arch, build-windows, build-macos]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') # Срабатывает на любой числовой тег
+    if: startsWith(github.ref, 'refs/tags/') # Works for any numeric tag
     steps:
       - name: Download Linux Artifact
         uses: actions/download-artifact@v4

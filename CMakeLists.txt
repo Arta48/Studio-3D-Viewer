@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Studio3DViewer)
-set(EXE_NAME Studio3DViewer)
+project(Studio-3D-Viewer)
+set(EXE_NAME Studio-3D-Viewer)
 
 # --- Настройки стандартов C++ и Qt ---
 set(CMAKE_CXX_STANDARD 17)
@@ -60,9 +60,10 @@ if(WIN32)
 endif()
 
 # --- Поиск зависимостей ---
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Concurrent)
-
+# --- Настройки для Windows ---
 if(WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Concurrent)
+
     # --- Настройки для Windows из-под Linux ---
     if(CMAKE_CROSSCOMPILING)
         set(LIB_PATH "/usr/x86_64-w64-mingw32/lib")
@@ -103,18 +104,28 @@ if(WIN32)
     if(TARGET WrapZSTD)
         set_target_properties(WrapZSTD PROPERTIES INTERFACE_LINK_LIBRARIES "${ZSTD_STATIC}")
     endif()
+# --- Настройки для Linux и macOS ---
+else()
+    # --- Настройки для macOS ---
+    if(APPLE AND NOT IOS AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT TARGET WrapOpenGL::WrapOpenGL)
+        find_package(OpenGL REQUIRED)
+        add_library(WrapOpenGL::WrapOpenGL INTERFACE IMPORTED)
+        target_link_libraries(WrapOpenGL::WrapOpenGL INTERFACE OpenGL::GL)
+    endif()
+
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Concurrent)
 endif()
 
 # --- Исходные файлы ---
-file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h" "src/*.c")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 
 # --- Ресурсы ---
 set(RESOURCES assets/resources.qrc)
 qt_add_resources(SOURCES ${RESOURCES})
 
-# --- Сборка ---
+# --- Сборка исполняемых файлов под целевые ОС ---
 if(WIN32)
-    # --- Настройки для Windows ---
+    # --- Сборка под Windows ---
     set(WIN_RESOURCES "${CMAKE_CURRENT_SOURCE_DIR}/assets/resource.rc")
 
      # ВАЖНО: Включаем ресурсы напрямую в список файлов
@@ -131,10 +142,34 @@ if(WIN32)
 
     # Финализация (обязательна для Qt6 на Windows)
     qt_finalize_executable(${EXE_NAME})
-else()
-    # --- Настройки для Linux ---
-    # Обычная сборка для Linux
-    add_executable(${EXE_NAME} ${SOURCES})
+elseif(APPLE)
+    # --- Сборка под macOS ---
+    # На macOS собираем как Bundle для генерации .app директории
+    set(MACOSX_ICON assets/macos/icon.icns)
+    set(MACOSX_LOCALES assets/macos/locales/ru.lproj/InfoPlist.strings assets/macos/locales/en.lproj/InfoPlist.strings)
 
+    # Размечаем ресурсы внутри бандла .app
+    set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set_source_files_properties(assets/macos/locales/ru.lproj/InfoPlist.strings PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/ru.lproj")
+    set_source_files_properties(assets/macos/locales/en.lproj/InfoPlist.strings PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/en.lproj")
+
+    add_executable(${EXE_NAME} MACOSX_BUNDLE ${SOURCES} ${MACOSX_ICON} ${MACOSX_LOCALES})
+
+    # Задаем метаданные бандла и подключаем кастомный Info.plist.in
+    set_target_properties(${EXE_NAME} PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/assets/macos/Info.plist.in
+        MACOSX_BUNDLE_ICON_FILE icon.icns
+        MACOSX_BUNDLE_BUNDLE_NAME "Studio 3D Viewer"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.arta48.studio-3d-viewer"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright © 2026 Arta48"
+        OUTPUT_NAME "Studio 3D Viewer" # Задает правильное имя папки .app
+    )
+
+    target_link_libraries(${EXE_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::Concurrent)
+else()
+    # --- Сборка под Linux ---
+    add_executable(${EXE_NAME} ${SOURCES})
     target_link_libraries(${EXE_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::Concurrent)
 endif()

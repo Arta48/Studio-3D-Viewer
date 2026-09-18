@@ -1,31 +1,30 @@
 #!/bin/bash
+set -e
 
 if [[ "$(uname)" != "Linux" ]] || ! command -v pacman > /dev/null; then
     echo "This script can only be run on Arch-based Linux!"
     exit 1
 fi
 
-
-# sudo at the beginning
+# Запрос sudo в самом начале
 sudo echo > /dev/null
 
-
-if [[ ! -f build/Studio3DViewer ]]; then
-    sh compile.sh || exit 1
+# 1. Сборка бинарника, если еще не собран
+if [[ ! -f build/Studio-3D-Viewer ]]; then
+    bash compile.sh
 fi
 
 
 mkdir studio-3d-viewer_pkg
-cp build/Studio3DViewer studio-3d-viewer_pkg
+cp build/Studio-3D-Viewer studio-3d-viewer_pkg
 cp assets/icon.png studio-3d-viewer_pkg/icon.png
 cd studio-3d-viewer_pkg
 
-
-# Info about Packager
 export PACKAGER="Arta <arta@gmail.com>"
 
-
-echo '# Maintainer: Arta <arta@gmail.com>
+# 3. Генерация PKGBUILD
+cat > PKGBUILD << 'EOF'
+# Maintainer: Arta <arta@gmail.com>
 pkgname=studio-3d-viewer
 pkgver=1.0.0
 pkgrel=1
@@ -45,7 +44,7 @@ optdepends=(
     "qt6-wayland: native Wayland support"
 )
 source=(
-    "Studio3DViewer"
+    "Studio-3D-Viewer"
     "icon.png"
 )
 sha256sums=(
@@ -65,11 +64,11 @@ prepare() {
     done
 
     # Creating a desktop file
-    cat > "${pkgname}.desktop" <<EOF
+    cat > "${pkgname}.desktop" <<_DESKTOP_EOF
 [Desktop Entry]
 Type=Application
 Name=Studio 3D Viewer
-Name[ru]=Студийный 3D-просмотрщик
+Name[ru]=Studio 3D Viewer
 Comment=Professional, lightweight, and mathematically strict 3D model inspection tool
 Comment[ru]=Профессиональный, легковесный и математически строгий инструмент для инспекции 3D-моделей
 Exec=studio-3d-viewer %F
@@ -77,9 +76,9 @@ Icon=${_icon}
 Terminal=false
 Categories=Graphics;3DGraphics;Viewer;Development;
 MimeType=model/obj;model/gltf+json;model/gltf-binary;
-StartupWMClass=Studio3DViewer
+StartupWMClass=${pkgname}
 Keywords=3d;viewer;obj;gltf;glb;pbr;model;
-EOF
+_DESKTOP_EOF
 }
 
 package() {
@@ -88,11 +87,11 @@ package() {
     _icon="${pkgname//-/}" # studio3dviewer
 
     # Installing the binary in /opt
-    install -Dm755 Studio3DViewer "${pkgdir}/opt/${pkgname}/Studio3DViewer"
+    install -Dm755 Studio-3D-Viewer "${pkgdir}/opt/${pkgname}/Studio-3D-Viewer"
 
     # Creating a symbolic link in /usr/bin
     install -d "${pkgdir}/usr/bin"
-    ln -s /opt/${pkgname}/Studio3DViewer "${pkgdir}/usr/bin/${pkgname}"
+    ln -s /opt/${pkgname}/Studio-3D-Viewer "${pkgdir}/usr/bin/${pkgname}"
 
     # Installing Icons
     sizes=("16" "24" "32" "48" "64" "128" "256")
@@ -102,16 +101,14 @@ package() {
 
     # Installing a desktop file
     install -Dm644 "${pkgname}.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
-}' > PKGBUILD
+}
+EOF
 
-
+# 4. Сборка и установка в систему
 makepkg -si --skipinteg --noconfirm
-
 
 cd .. && rm -rf studio-3d-viewer_pkg
 
-
-# Status output
 echo "
-
-Done!"
+Done!
+"
