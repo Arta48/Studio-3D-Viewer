@@ -6,9 +6,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <thread>
-#include <algorithm>
 
 namespace StudioViewer {
 

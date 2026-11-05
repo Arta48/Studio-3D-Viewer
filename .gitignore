@@ -3,3 +3,4 @@ build-windows/
 build-macos/
 .DS_Store
 3DModels/
+.cache/

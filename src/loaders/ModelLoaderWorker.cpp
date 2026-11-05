@@ -3,7 +3,6 @@
 #include "loaders/GltfLoader.h"
 #include "loaders/Texture.h"
 #include "core/I18n.h"
-#include "core/Constants.h"
 #include <QFileInfo>
 #include <QElapsedTimer>
 #include <QtConcurrent>
